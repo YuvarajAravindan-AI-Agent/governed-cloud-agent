@@ -1,0 +1,12 @@
+{
+ "description": "Cloud Run Python web app/API plus its own Firestore (native mode) database, for apps that must store data. App is app/main.py listening on 0.0.0.0 at env PORT (default 8080); optional app/requirements.txt (add google-cloud-firestore to use it). The database id is in env FIRESTORE_DATABASE and the project in env GOOGLE_CLOUD_PROJECT; the app's service account already has datastore.user on that database only. Use firestore.Client(project=os.environ['GOOGLE_CLOUD_PROJECT'], database=os.environ['FIRESTORE_DATABASE']).",
+ "writable": [
+  "app/"
+ ],
+ "test": {
+  "kind": "server",
+  "root": "app",
+  "entry": "main.py"
+ },
+ "entry": "app/main.py"
+}

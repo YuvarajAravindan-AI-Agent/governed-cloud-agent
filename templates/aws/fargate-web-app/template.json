@@ -1,0 +1,12 @@
+{
+ "description": "Containerised Python web app on AWS Fargate behind an Application Load Balancer (plain HTTP). Use for long-running servers, websockets-free web apps with pip dependencies. The app is app/main.py; it MUST listen on 0.0.0.0 at the port in env PORT (default 8080) and answer GET / with a non-5xx status. Optional app/requirements.txt (installed at start). Costs more than Lambda while running, so prefer Lambda unless the user needs a regular always-on server.",
+ "writable": [
+  "app/"
+ ],
+ "test": {
+  "kind": "server",
+  "root": "app",
+  "entry": "main.py"
+ },
+ "entry": "app/main.py"
+}

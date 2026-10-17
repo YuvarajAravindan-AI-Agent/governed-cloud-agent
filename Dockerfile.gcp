@@ -1,0 +1,16 @@
+FROM python:3.13-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY container/terraform container/opa /usr/local/bin/
+# Providers baked in so `terraform init` never downloads anything at runtime.
+COPY container/mirror-gcp.tf /tmp/mirror/main.tf
+RUN cd /tmp/mirror && terraform providers mirror /opt/tfmirror && rm -rf /tmp/mirror
+COPY container/terraformrc /etc/terraformrc
+ENV TF_CLI_CONFIG_FILE=/etc/terraformrc HOME=/tmp \
+    GCA_CLOUD=gcp GCA_MODE=cloud GCA_TERRAFORM=/usr/local/bin/terraform GCA_OPA=/usr/local/bin/opa \
+    PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /srv
+RUN pip install --no-cache-dir fastapi uvicorn pydantic google-genai google-cloud-storage google-auth
+COPY app app
+COPY policies policies
+COPY templates templates
+CMD ["sh", "-c", "exec python -m uvicorn app.server:app --host 0.0.0.0 --port ${PORT:-8080}"]

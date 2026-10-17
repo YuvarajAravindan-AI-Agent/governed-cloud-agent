@@ -1,0 +1,10 @@
+.venv
+.work
+.git
+bootstrap
+deploy
+tests
+.env.local
+server.log
+**/.terraform
+**/*.tfstate*

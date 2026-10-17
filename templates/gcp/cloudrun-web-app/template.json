@@ -1,0 +1,12 @@
+{
+ "description": "Containerised Python web app/API on Google Cloud Run (HTTPS URL, scales to zero, free when idle). The app is app/main.py; it MUST listen on 0.0.0.0 at the port in env PORT (default 8080) and answer GET / with a non-5xx status. Optional app/requirements.txt (pip packages are installed at start). No database.",
+ "writable": [
+  "app/"
+ ],
+ "test": {
+  "kind": "server",
+  "root": "app",
+  "entry": "main.py"
+ },
+ "entry": "app/main.py"
+}

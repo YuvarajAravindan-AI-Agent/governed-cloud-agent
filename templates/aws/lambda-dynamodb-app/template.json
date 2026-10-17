@@ -1,0 +1,12 @@
+{
+ "description": "Python AWS Lambda + DynamoDB table (pay-per-request) behind a public HTTPS URL. Use for apps that must store data. Table keys are string attributes 'pk' (partition) and 'sk' (sort); env var TABLE_NAME holds the table name.",
+ "writable": [
+  "app/"
+ ],
+ "test": {
+  "kind": "lambda",
+  "root": "app",
+  "entry": "handler.py"
+ },
+ "entry": "app/handler.py"
+}

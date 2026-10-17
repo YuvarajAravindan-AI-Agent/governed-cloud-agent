@@ -1,0 +1,11 @@
+{
+ "description": "Static website (HTML/CSS/JS/images as text files) served over HTTPS by Amazon CloudFront from a private S3 bucket. Cheapest and fastest option for landing pages and front-end-only apps. Entry file site/index.html. Creating or deleting the CloudFront distribution takes a few minutes.",
+ "writable": [
+  "site/"
+ ],
+ "test": {
+  "kind": "static",
+  "root": "site"
+ },
+ "entry": "site/index.html"
+}

@@ -1,0 +1,12 @@
+{
+ "description": "Python AWS Lambda web app/API behind a public HTTPS URL. Stateless; no database.",
+ "writable": [
+  "app/"
+ ],
+ "test": {
+  "kind": "lambda",
+  "root": "app",
+  "entry": "handler.py"
+ },
+ "entry": "app/handler.py"
+}

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Governed Cloud Agent</title>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--ink:#16181d;--mute:#6a7280;--line:#e2e5ea;--acc:#ff9900;--accd:#b36b00;--ok:#1a7f4b;--bad:#b42318;--code:#f0f2f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--panel:#181b21;--ink:#e8eaee;--mute:#8b93a1;--line:#2a2f38;--acc:#ffb340;--accd:#ffb340;--ok:#4cc38a;--bad:#ff7b72;--code:#20242c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,sans-serif;height:100vh;display:flex;flex-direction:column}
+header{display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:15px;margin:0;font-weight:650}header .tag{font-size:12px;color:var(--mute);margin-left:auto}
+main{flex:1;display:grid;grid-template-columns:1fr 300px;min-height:0}
+@media(max-width:760px){main{grid-template-columns:1fr}aside{display:none}}
+#chat{display:flex;flex-direction:column;min-height:0}
+#log{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:760px;padding:10px 14px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}
+.u{align-self:flex-end;background:var(--acc);color:#1a1200}.a{background:var(--panel);border:1px solid var(--line)}
+.t{font:12px ui-monospace,monospace;color:var(--mute);background:var(--code);border-radius:8px;padding:6px 10px;max-width:760px;white-space:pre-wrap;overflow:hidden}
+.t b{color:var(--ink)}.err{color:var(--bad)}
+.card{max-width:760px;border:2px solid var(--acc);border-radius:12px;background:var(--panel);padding:14px}
+.card h3{margin:0 0 6px;font-size:14px}.card ul{margin:6px 0 10px;padding-left:20px;font:13px ui-monospace,monospace}
+.card.block{border-color:var(--bad)}.card .sum{color:var(--ok);font-size:13px}
+button{font:inherit;border-radius:8px;border:1px solid var(--line);padding:7px 14px;cursor:pointer;background:var(--panel);color:var(--ink)}
+button.go{background:var(--ok);color:#fff;border-color:var(--ok)}button.no{color:var(--bad)}button:disabled{opacity:.5}
+form{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);background:var(--panel)}
+input[type=text]{flex:1;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+aside{border-left:1px solid var(--line);background:var(--panel);padding:14px;overflow:auto;font-size:13px}
+aside h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}aside ul{padding-left:16px;margin:0 0 16px;font:12px ui-monospace,monospace}
+a{color:var(--accd)}.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:var(--code)}
+.force{font-size:13px;margin-left:10px;display:flex;gap:5px;align-items:center;cursor:pointer}.force input{accent-color:var(--acc)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-left:12px}
+.seg button{border:0;border-radius:0;padding:5px 12px;font-size:13px;display:flex;gap:6px;align-items:center;background:var(--panel)}
+.seg button+button{border-left:1px solid var(--line)}.seg button.on{background:var(--acc);color:#1a1200;font-weight:600}
+.seg button:disabled{opacity:.45;cursor:not-allowed}.dot{width:7px;height:7px;border-radius:50%;background:var(--mute)}
+.dot.online{background:var(--ok)}.dot.offline{background:var(--bad)}.seglbl{font-size:12px;color:var(--mute);margin-left:10px}
+.sbx{font:12px ui-monospace,monospace;border-left:3px solid var(--ok);padding:4px 10px;max-width:760px;color:var(--mute)}
+.sbx.failed,.sbx.unavailable{border-color:var(--bad)}.sbx.needs_cloud,.sbx.partial,.sbx.missing_packages{border-color:var(--acc)}
+@media(max-width:760px){.seglbl{display:none}.seg button{padding:5px 8px}header .tag{display:none}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 8px}.chips button{font-size:13px;padding:5px 10px}
+</style></head><body>
+<header><h1>Governed Cloud Agent</h1><span class="pill" id="env">AWS</span>
+<span class="seglbl">Sandbox: auto</span><span class="dot" id="mdot" title="Moyai status"></span>
+<label class="force" title="Test only on Moyai and refuse if it is offline"><input type="checkbox" id="force"> Force Moyai</label>
+<span class="tag" id="model"></span></header>
+<main>
+<section id="chat"><div id="log"></div>
+<div class="chips" id="chips"></div>
+<form id="f"><input type="text" id="q" placeholder="Describe what to build, e.g. “a URL shortener API”" autocomplete="off" autofocus><button class="go" id="send">Send</button></form></section>
+<aside><h4>Session</h4><div id="sid" class="pill"></div>
+<h4 style="margin-top:14px">Live app</h4><div id="live" style="margin-bottom:16px;color:var(--mute)">not deployed</div>
+<h4>Sandbox</h4><div id="sbxinfo" style="margin-bottom:16px;color:var(--mute)">—</div>
+<h4>Workspace files</h4><ul id="files"></ul><h4>Expires</h4><div id="exp" style="color:var(--mute)">—</div></aside>
+</main>
+<script>
+const $=s=>document.querySelector(s),log=$('#log');
+let sid=localStorage.gcaSid||(localStorage.gcaSid=[...crypto.getRandomValues(new Uint8Array(6))].map(b=>b.toString(16).padStart(2,'0')).join(''));
+let key=localStorage.gcaKey||'';$('#sid').textContent=sid;
+const add=(cls,html)=>{const d=document.createElement('div');d.className=cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d};
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let force=localStorage.gcaForce==='1',sbxList=[];$('#force').checked=force;
+$('#force').onchange=e=>{force=e.target.checked;localStorage.gcaForce=force?'1':'0';drawSbx()};
+fetch('/api/config').then(r=>r.json()).then(c=>{$('#model').textContent=c.model;$('#env').textContent=c.cloud==='gcp'?'Google Cloud':'AWS';
+  if(c.needs_key&&!key){key=prompt('Access key')||'';localStorage.gcaKey=key}loadSbx()});
+async function loadSbx(){try{const r=await fetch('/api/sandboxes',{headers:{'x-access-key':key}});if(!r.ok)return;sbxList=await r.json();drawSbx()}catch(e){}}
+function drawSbx(){const m=sbxList.find(x=>x.id==='moyai'),d=sbxList.find(x=>x.id==='default');
+  $('#mdot').className='dot '+(m?m.status:'');$('#mdot').title='Moyai: '+(m?m.status+' · '+(m.detail||''):'unknown');
+  $('#force').disabled=!force&&(!m||m.status!=='online');
+  $('#sbxinfo').innerHTML=(force?'Forced: Moyai only':'Auto')+'<br>Default: '+esc(d?d.backend:'—')+'<br>Moyai: '+esc(m?m.status:'—')}
+setInterval(loadSbx,60000);
+["Build a URL shortener API (in-memory demo)","Make a landing page for a dental clinic","Create a JSON API that returns random dad jokes","Remove everything you deployed"].forEach(t=>{const b=document.createElement('button');b.textContent=t;b.type='button';b.onclick=()=>{$('#q').value=t;$('#f').requestSubmit()};$('#chips').appendChild(b)});
+async function stream(path,body){
+  $('#send').disabled=true;let cur=null;
+  try{const r=await fetch(path,{method:'POST',headers:{'content-type':'application/json','x-access-key':key},body:JSON.stringify(body)});
+  if(!r.ok){add('t err',esc(await r.text()));return}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+  for(;;){const {done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});
+    let i;while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+2);if(line.startsWith('data: '))ev(JSON.parse(line.slice(6)))}}
+  }catch(e){add('t err',esc(e))}finally{$('#send').disabled=false;refresh()}}
+function ev(e){
+  if(e.type==='text')add('m a',esc(e.text).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>'));
+  else if(e.type==='tool_call')add('t','<b>'+esc(e.name)+'</b> '+esc(JSON.stringify(e.input)).slice(0,300));
+  else if(e.type==='tool_result')add('t',esc(e.text).slice(0,500));
+  else if(e.type==='status')add('t',esc(e.text));
+  else if(e.type==='sandbox')add('sbx '+e.status,'sandbox · '+esc(e.sandbox||'')+' · <b>'+esc(e.status)+'</b>'+(e.seconds?' · '+e.seconds+' s':'')+(e.reason?' · '+esc(e.reason):'')+(e.detail?' · '+esc(e.detail):''));
+  else if(e.type==='error')add('t err',esc(e.text));
+  else if(e.type==='policy_block')add('card block','<h3>Policy gate blocked this plan</h3><ul>'+e.violations.map(v=>'<li>'+esc(v)+'</li>').join('')+'</ul>The agent will fix and retry.');
+  else if(e.type==='approval'){
+    const c=add('card','<h3>'+(e.kind==='destroy'?'Approve teardown?':'Approve deployment?')+'</h3><div>'+esc(e.reason||'')+'</div>'+
+      (e.summary?'<div class="sum">Policy gate passed · '+esc(e.summary)+' · plan '+esc(e.digest)+'</div>':'')+
+      '<ul>'+(e.changes||[]).map(x=>'<li>'+esc(x.actions.join('+'))+' '+esc(x.address)+'</li>').join('')+'</ul>'+
+      '<button class="go">Approve</button> <button class="no">Reject</button>');
+    const [y,n]=c.querySelectorAll('button');
+    const go=a=>{y.disabled=n.disabled=true;stream('/api/decide',{session:sid,approve:a})};y.onclick=()=>go(true);n.onclick=()=>go(false)}
+  else if(e.type==='deployed'&&e.outputs.url)add('m a','Deployed → <a href="'+esc(e.outputs.url)+'" target="_blank" rel="noopener">'+esc(e.outputs.url)+'</a>');
+}
+$('#f').onsubmit=ev2=>{ev2.preventDefault();const t=$('#q').value.trim();if(!t)return;$('#q').value='';add('m u',esc(t));stream('/api/chat',{session:sid,text:t,force_moyai:force})};
+async function refresh(){try{const r=await fetch('/api/session/'+sid,{headers:{'x-access-key':key}});if(!r.ok)return;const s=await r.json();
+  $('#files').innerHTML=s.files.map(f=>'<li>'+esc(f)+'</li>').join('')||'<li>—</li>';
+  $('#live').innerHTML=s.outputs.url?'<a href="'+esc(s.outputs.url)+'" target="_blank" rel="noopener">'+esc(s.outputs.url)+'</a>':'not deployed';
+  $('#exp').textContent=s.expires||'—'}catch(e){}}
+refresh();
+</script></body></html>

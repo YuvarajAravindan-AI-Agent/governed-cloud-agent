@@ -1,0 +1,11 @@
+{
+ "description": "Static website (HTML/CSS/JS/images as text files) served over HTTPS from Google Cloud Run (scales to zero). Entry file bundle/site/index.html; write all site files under bundle/site/.",
+ "writable": [
+  "bundle/site/"
+ ],
+ "test": {
+  "kind": "static",
+  "root": "bundle/site"
+ },
+ "entry": "bundle/site/index.html"
+}
